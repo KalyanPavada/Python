@@ -1,0 +1,58 @@
+import pytest
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+import time
+
+@pytest.fixture(autouse=True)
+def log():
+    global driver
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    driver.maximize_window()
+    driver.get("https://opensource-demo.orangehrmlive.com/")
+    print(driver.title)
+    driver.find_element(By.ID, "txtUsername").send_keys("Admin")
+    driver.find_element(By.ID, "txtPassword").send_keys("admin123")
+    driver.find_element(By.NAME, "Submit").send_keys(Keys.ENTER)
+    yield driver
+    driver.quit()
+def test_login():
+    try:
+        driver.refresh()
+
+    except Exception as E:
+        print("Error occurs in 1st fuun : ",E)
+        driver.save_screenshot("error1.png")
+def test_action():
+    try:
+        WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH,"//b[contains(text(),'PIM')]")))
+        driver.find_element(By.XPATH,"//b[contains(text(),'PIM')]").click()
+        WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH,"//tbody/tr[50]/td[2]/a[1]")))
+        scr = driver.find_element(By.XPATH,"//tbody/tr[50]/td[2]/a[1]")
+        ActionChains(driver).move_to_element(scr).perform()
+        time.sleep(3)
+    except Exception as E:
+        print("Error occurs in 2nd fun : ",E)
+        driver.save_screenshot("error2.png")
+def test_new_tab():
+    try:
+        driver.execute_script("window.open('');")
+        driver.switch_to.window(driver.window_handles[1])
+        driver.get("https://contests.heymath.com/RI22")
+        print(driver.title)
+        in_frame = driver.find_element(By.TAG_NAME,"iframe")
+        driver.switch_to.frame(in_frame)
+        WebDriverWait(driver,5).until(EC.element_to_be_clickable((By.ID,"loginBtn")))
+        driver.find_element(By.ID,"loginBtn").click()
+        driver.switch_to.parent_frame()
+        driver.find_element(By.NAME,"plp_userinput").send_keys("hello437")
+        time.sleep(2)
+    except Exception as E:
+        print("Error occurs in 3rd fun : ",E)
+        driver.save_screenshot("error3.png")
+
